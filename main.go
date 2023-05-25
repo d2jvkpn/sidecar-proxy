@@ -73,7 +73,7 @@ func main() {
 		log.Fatalln(err)
 	}
 	msg := fmt.Sprintf(
-		"Http server is listening on: %q => %q",
+		"Http server is listening on: %s => %s",
 		vp.GetString("addr"), vp.GetString("service"),
 	)
 	log.Println("==>", msg)

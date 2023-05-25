@@ -38,10 +38,11 @@ type SidecarProxyConfig struct {
 	Service string `mapstructure:"service"`
 	Cors    string `mapstructure:"cors"`
 
-	Tls  bool       `mapstructure:"tls"`
-	Cert string     `mapstructure:"cert"`
-	Key  string     `mapstructure:"key"`
-	Auth AuthConfig `mapstructure:"auth"`
+	Tls  bool   `mapstructure:"tls"`
+	Cert string `mapstructure:"cert"`
+	Key  string `mapstructure:"key"`
+
+	BasicAuth BasicAuthentication `mapstructure:"basic_auth"`
 }
 
 type SidecarProxyServer struct {
@@ -51,7 +52,8 @@ type SidecarProxyServer struct {
 	logger *zap.Logger
 }
 
-func NewSidecarProxyServer(vp *viper.Viper, logger *zap.Logger) (sps *SidecarProxyServer, err error) {
+func NewSidecarProxyServer(vp *viper.Viper, logger *zap.Logger) (
+	sps *SidecarProxyServer, err error) {
 	var (
 		config SidecarProxyConfig
 		cert   tls.Certificate
@@ -105,7 +107,7 @@ func (sps *SidecarProxyServer) handle(w http.ResponseWriter, r *http.Request) {
 		remoteAddr = v
 	}
 
-	if code, err := sps.auth(w, r); err != nil {
+	if code, err := sps.config.BasicAuth.Handle(w, r); err != nil {
 		sps.logger.Error(
 			msg,
 			zap.String("remote_addr", remoteAddr), zap.String("code", code),
