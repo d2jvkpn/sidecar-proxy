@@ -114,12 +114,13 @@ func (sps *SidecarProxyServer) handle(w http.ResponseWriter, r *http.Request) {
 		remoteAddr = v
 	}
 
-	authCode, err := sps.config.BasicAuth.Handle(w, r)
+	user, authCode, err := sps.config.BasicAuth.Handle(w, r)
 	if err != nil {
 		sps.logger.Error(
 			msg,
-			zap.String("auth_code", authCode),
 			zap.String("remote_addr", remoteAddr),
+			zap.String("user", user),
+			zap.String("auth_code", authCode),
 			zap.String("latency", time.Since(startAt).String()),
 			zap.Any("error", err),
 		)
@@ -132,8 +133,9 @@ func (sps *SidecarProxyServer) handle(w http.ResponseWriter, r *http.Request) {
 
 	sps.logger.Info(
 		msg,
-		zap.String("auth_code", authCode),
 		zap.String("remote_addr", remoteAddr),
+		zap.String("user", user),
+		zap.String("auth_code", authCode),
 		zap.String("latency", time.Since(startAt).String()),
 	)
 }

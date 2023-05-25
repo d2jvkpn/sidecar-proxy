@@ -53,10 +53,10 @@ github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDk
 github.com/cncf/udpa/go v0.0.0-20191209042840-269d4d468f6f/go.mod h1:M8M6+tZqaGXZJjfX53e64911xZQV5JYwmTeXPW+k8Sc=
 github.com/cncf/udpa/go v0.0.0-20200629203442-efcf912fb354/go.mod h1:WmhPx2Nbnhtbo57+VJT5O0JRkEi1Wbu0z5j0R8u5Hbk=
 github.com/cncf/udpa/go v0.0.0-20201120205902-5459f2c99403/go.mod h1:WmhPx2Nbnhtbo57+VJT5O0JRkEi1Wbu0z5j0R8u5Hbk=
-github.com/d2jvkpn/gotk v0.0.0-20230525065609-66c57e69cb87 h1:FUoNCpG63cqBFW6vz3oNehieBgYIdVND3jEV0NmlsK8=
-github.com/d2jvkpn/gotk v0.0.0-20230525065609-66c57e69cb87/go.mod h1:XQMSKPMCWAeVMP9SHsu6L8ap6dztzFWth5ULmvQCgRo=
-github.com/d2jvkpn/gotk/impls v0.0.0-20230525070143-e2b92f0c6954 h1:JAmhhVuXtFzG8wL7xy2Qao60G8cspE7NdvZMSB/LK48=
-github.com/d2jvkpn/gotk/impls v0.0.0-20230525070143-e2b92f0c6954/go.mod h1:FljFAEVh6ufUhZZTPHqxqojgH0wtqzFWW5//2N1geek=
+github.com/d2jvkpn/gotk v0.0.0-20230525095929-a38c3952592c h1:cDiJ6hELh7tWqfetTAO//I2iFfVWzT0GJPqXMbJrkw8=
+github.com/d2jvkpn/gotk v0.0.0-20230525095929-a38c3952592c/go.mod h1:XQMSKPMCWAeVMP9SHsu6L8ap6dztzFWth5ULmvQCgRo=
+github.com/d2jvkpn/gotk/impls v0.0.0-20230525095929-a38c3952592c h1:v1oJXrvGLsXDTwF8GdcVP08WU0plgY4zXeU0p+Caa8s=
+github.com/d2jvkpn/gotk/impls v0.0.0-20230525095929-a38c3952592c/go.mod h1:FljFAEVh6ufUhZZTPHqxqojgH0wtqzFWW5//2N1geek=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
