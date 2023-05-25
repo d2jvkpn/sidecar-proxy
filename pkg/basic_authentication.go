@@ -37,7 +37,7 @@ func NewBasicAuthentication(vp *viper.Viper, field string) (auth *BasicAuthentic
 func (auth *BasicAuthentication) Handle(w http.ResponseWriter, r *http.Request) (
 	code string, err error) {
 	if !auth.Enable {
-		return "auth_disabled", nil
+		return "disabled", nil
 	}
 
 	var (
@@ -73,7 +73,7 @@ func (auth *BasicAuthentication) Handle(w http.ResponseWriter, r *http.Request) 
 		if md5sum != auth.Users[string(u)] {
 			return "incorrect_username_or_password", fmt.Errorf("incorrect username or password")
 		}
-		return "ok", nil
+		return "md5", nil
 	}
 
 	// auth.Method == "bcrypt"
@@ -88,5 +88,5 @@ func (auth *BasicAuthentication) Handle(w http.ResponseWriter, r *http.Request) 
 
 	r.Header.Del("Authorization")
 
-	return "ok", nil
+	return "bcrypt", nil
 }
