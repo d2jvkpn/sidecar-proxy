@@ -1,0 +1,16 @@
+project: sidecar-proxy
+repository: https://github.com/d2jvkpn/sidecar-proxy
+version: 0.1.0
+
+config: |
+  sidecar_proxy:
+    addr: :8080
+    service: http://localhost:8000
+    cors: "*"
+    tls: false
+    cert: "configs/server.cert"
+    key: "configs/server.key"
+    auth:
+      enable: true
+      users:
+        hello: $2a$10$scqefoWP3SwzgB.bLkbQ0e0Cre45AA16ibI3lxichOp3FohzQm9BK

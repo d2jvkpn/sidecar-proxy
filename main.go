@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "embed"
 	"flag"
 	"fmt"
 	"log"
@@ -18,6 +19,11 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
+var (
+	//go:embed project.yaml
+	_Project []byte
+)
+
 func init() {
 	gotk.RegisterLogPrinter()
 }
@@ -30,9 +36,23 @@ func main() {
 		logger   *wrap.Logger
 		sps      *pkg.SidecarProxyServer
 		shutdown func() error
+		project  *viper.Viper
 	)
 
+	if project, err = impls.LoadYamlBytes(_Project); err != nil {
+		log.Fatalln(err)
+	}
+
 	flag.StringVar(&config, "config", "configs/local.yaml", "configuration yaml file")
+
+	flag.Usage = func() {
+		output := flag.CommandLine.Output()
+
+		fmt.Fprintf(output, "Usage:\n")
+		flag.PrintDefaults()
+		fmt.Fprintf(output, "\nConfiguration:\n```yaml\n%s```\n", project.GetString("config"))
+	}
+
 	flag.Parse()
 
 	if vp, err = impls.LoadYamlConfig(config, "Configuration"); err != nil {
@@ -69,7 +89,7 @@ func main() {
 	}
 
 	if err = shutdown(); err != nil {
-		logger.Error("http server shutdown", zap.Any("error", err))
+		logger.Error("http server shutdown erro", zap.Any("error", err))
 		log.Fatalln(err)
 	} else {
 		log.Println("<<< Exit")

@@ -107,7 +107,8 @@ func (sps *SidecarProxyServer) handle(w http.ResponseWriter, r *http.Request) {
 
 	if code, err := sps.auth(w, r); err != nil {
 		sps.logger.Error(
-			msg, zap.String("remote_addr", remoteAddr), zap.String("code", code),
+			msg,
+			zap.String("remote_addr", remoteAddr), zap.String("code", code),
 			zap.Any("error", err), zap.String("latency", time.Since(startAt).String()),
 		)
 		return
@@ -118,8 +119,8 @@ func (sps *SidecarProxyServer) handle(w http.ResponseWriter, r *http.Request) {
 	proxy.ServeHTTP(w, r)
 
 	sps.logger.Info(
-		msg, zap.String("remote_addr", remoteAddr),
-		zap.String("latency", time.Since(startAt).String()),
+		msg,
+		zap.String("remote_addr", remoteAddr), zap.String("latency", time.Since(startAt).String()),
 	)
 }
 
