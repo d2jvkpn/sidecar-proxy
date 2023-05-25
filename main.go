@@ -10,7 +10,6 @@ import (
 	"syscall"
 
 	"github.com/d2jvkpn/sidecar-proxy/pkg"
-	"github.com/d2jvkpn/sidecar-proxy/pkg/wrap"
 
 	"github.com/d2jvkpn/gotk"
 	"github.com/d2jvkpn/gotk/impls"
@@ -33,14 +32,23 @@ func main() {
 		config   string
 		err      error
 		vp       *viper.Viper
-		logger   *wrap.Logger
+		project  *viper.Viper
+		logger   *impls.Logger
 		sps      *pkg.SidecarProxyServer
 		shutdown func() error
-		project  *viper.Viper
 	)
 
+	defer func() {
+		if logger != nil {
+			_ = logger.Down()
+		}
+		if err != nil {
+			log.Fatalln(err)
+		}
+	}()
+
 	if project, err = impls.LoadYamlBytes(_Project); err != nil {
-		log.Fatalln(err)
+		return
 	}
 
 	flag.StringVar(&config, "config", "configs/local.yaml", "configuration yaml file")
@@ -56,21 +64,18 @@ func main() {
 	flag.Parse()
 
 	if vp, err = impls.LoadYamlConfig(config, "Configuration"); err != nil {
-		log.Fatalln(err)
+		return
 	}
 
-	logger, err = wrap.NewLogger("logs/sidecar-proxy.log", zapcore.InfoLevel, 256)
-	if err != nil {
-		log.Fatalln(err)
-	}
+	logger, err = impls.NewLogger("logs/sidecar-proxy.log", zapcore.InfoLevel, 256)
 
 	vp = vp.Sub("sidecar_proxy")
 	if sps, err = pkg.NewSidecarProxyServer(vp, logger.Named("proxy")); err != nil {
-		log.Fatalln(err)
+		return
 	}
 
 	if shutdown, err = sps.Serve(); err != nil {
-		log.Fatalln(err)
+		return
 	}
 	msg := fmt.Sprintf(
 		"Http server is listening on: %s => %s",
@@ -89,10 +94,9 @@ func main() {
 	}
 
 	if err = shutdown(); err != nil {
-		logger.Error("http server shutdown erro", zap.Any("error", err))
-		log.Fatalln(err)
+		logger.Error("http server shutdown", zap.Any("error", err))
 	} else {
-		log.Println("<<< Exit")
 		logger.Info("http server is down")
+		log.Println("<<< Exit")
 	}
 }

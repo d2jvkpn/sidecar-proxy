@@ -65,6 +65,10 @@ func NewSidecarProxyServer(vp *viper.Viper, logger *zap.Logger) (
 		return nil, err
 	}
 
+	if err = config.BasicAuth.Validate(); err != nil {
+		return nil, err
+	}
+
 	sps = &SidecarProxyServer{
 		config: config,
 		server: new(http.Server),

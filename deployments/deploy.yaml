@@ -3,7 +3,7 @@ version: '3'
 services:
   sidecar-proxy:
     image: registry.cn-shanghai.aliyuncs.com/d2jvkpn/sidecar-proxy:${TAG}
-    container_name:  sidecar-proxy
+    container_name: sidecar-proxy
     restart: always
     # depends_on: ["mongo"]
     networks: ["net"]
