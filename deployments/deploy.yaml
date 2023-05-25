@@ -1,0 +1,24 @@
+version: '3'
+
+services:
+  sidecar-proxy:
+    image: registry.cn-shanghai.aliyuncs.com/d2jvkpn/sidecar-proxy:${TAG}
+    container_name:  sidecar-proxy
+    restart: always
+    # depends_on: ["mongo"]
+    networks: ["net"]
+    # network_mode: bridge
+    # network_mode: host
+    ports: ["${PORT}:${PORT}"]
+    environment: ["TZ=Asia/Shanghai"]
+    volumes:
+    - ./configs/:/home/hello/sidecar-proxy/configs/
+    - ./logs/:/home/hello/sidecar-proxy/logs/
+    # - ./data/:/home/hello/sidecar-proxy/data/
+    command: ["./main", "--config=configs/prod.yaml", "--addr=:${PORT}"]
+
+networks:
+  net:
+    name: sidecar-proxy
+    driver: bridge
+    external: false
