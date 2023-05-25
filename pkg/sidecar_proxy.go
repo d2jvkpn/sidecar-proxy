@@ -52,7 +52,7 @@ type SidecarProxyServer struct {
 	logger *zap.Logger
 }
 
-func NewSidecarProxyServer(vp *viper.Viper, logger *zap.Logger) (
+func NewSidecarProxyServer(vp *viper.Viper, logger *zap.Logger, opts ...func(*http.Server)) (
 	sps *SidecarProxyServer, err error) {
 	var (
 		config SidecarProxyConfig
@@ -78,16 +78,18 @@ func NewSidecarProxyServer(vp *viper.Viper, logger *zap.Logger) (
 		return nil, err
 	}
 
-	if !config.Tls {
-		return sps, nil
+	for i := range opts {
+		opts[i](sps.server)
 	}
 
-	if cert, err = tls.LoadX509KeyPair(config.Cert, config.Key); err != nil {
-		return nil, err
-	}
+	if config.Tls {
+		if cert, err = tls.LoadX509KeyPair(config.Cert, config.Key); err != nil {
+			return nil, err
+		}
 
-	sps.server.TLSConfig = &tls.Config{
-		Certificates: []tls.Certificate{cert},
+		sps.server.TLSConfig = &tls.Config{
+			Certificates: []tls.Certificate{cert},
+		}
 	}
 
 	return sps, nil
@@ -109,16 +111,18 @@ func (sps *SidecarProxyServer) handle(w http.ResponseWriter, r *http.Request) {
 
 	startAt := time.Now()
 	msg := fmt.Sprintf("%s %s", r.Method, r.URL.Path)
+
 	remoteAddr := r.RemoteAddr
 	if v := r.Header.Get("X-Forwarded-For"); v != "" {
 		remoteAddr = v
 	}
+	ip, _, _ := net.SplitHostPort(remoteAddr)
 
 	user, authCode, err := sps.config.BasicAuth.Handle(w, r)
 	if err != nil {
 		sps.logger.Error(
 			msg,
-			zap.String("remote_addr", remoteAddr),
+			zap.String("ip", ip),
 			zap.String("user", user),
 			zap.String("auth_code", authCode),
 			zap.String("latency", time.Since(startAt).String()),
@@ -133,17 +137,11 @@ func (sps *SidecarProxyServer) handle(w http.ResponseWriter, r *http.Request) {
 
 	sps.logger.Info(
 		msg,
-		zap.String("remote_addr", remoteAddr),
+		zap.String("ip", ip),
 		zap.String("user", user),
 		zap.String("auth_code", authCode),
 		zap.String("latency", time.Since(startAt).String()),
 	)
-}
-
-func (sps *SidecarProxyServer) SetServer(opts ...func(*http.Server)) {
-	for i := range opts {
-		opts[i](sps.server)
-	}
 }
 
 func (sps *SidecarProxyServer) Serve(addr string) (shutdown func() error, err error) {
