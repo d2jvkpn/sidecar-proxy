@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/d2jvkpn/gotk v0.0.0-20230525095929-a38c3952592c
-	github.com/d2jvkpn/gotk/impls v0.0.0-20230525095929-a38c3952592c
+	github.com/d2jvkpn/gotk/impls v0.0.0-20230525161303-f2cf51e64244
 	github.com/spf13/viper v1.15.0
 	go.uber.org/zap v1.24.0
 )

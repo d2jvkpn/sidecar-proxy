@@ -14,7 +14,7 @@ config: |
       # enum: md5(username:password), bcrypt
       method: bcrypt
       users:
-        hello: $2a$10$scqefoWP3SwzgB.bLkbQ0e0Cre45AA16ibI3lxichOp3FohzQm9BK
+      - { username: hello, password: $2a$10$scqefoWP3SwzgB.bLkbQ0e0Cre45AA16ibI3lxichOp3FohzQm9BK }
       # method: md5
       # users:
-      #   hello: 6de41d334b7ce946682da48776a10bb9
+      # - { username: hello, password: 6de41d334b7ce946682da48776a10bb9 }
