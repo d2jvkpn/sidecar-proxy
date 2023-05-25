@@ -35,7 +35,6 @@ sidecar_proxy:
 ```
 */
 type SidecarProxyConfig struct {
-	Addr    string `mapstructure:"addr"`
 	Service string `mapstructure:"service"`
 	Cors    string `mapstructure:"cors"`
 
@@ -99,7 +98,10 @@ func (sps *SidecarProxyServer) handle(w http.ResponseWriter, r *http.Request) {
 		header := w.Header()
 		header.Set("Access-Control-Allow-Origin", sps.config.Cors)
 		header.Set("Access-Control-Expose-Headers", "Content-Type, Authorization")
-		header.Set("Access-Control-Expose-Headers", "Access-Control-Allow-Origin, Access-Control-Allow-Headers, Content-Type, Content-Length")
+
+		header.Set("Access-Control-Expose-Headers", "Access-Control-Allow-Origin, "+
+			"Access-Control-Allow-Headers, Content-Type, Content-Length")
+
 		header.Set("Access-Control-Allow-Credentials", "true")
 		header.Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS, HEAD")
 		return
@@ -112,11 +114,11 @@ func (sps *SidecarProxyServer) handle(w http.ResponseWriter, r *http.Request) {
 		remoteAddr = v
 	}
 
-	code, err := sps.config.BasicAuth.Handle(w, r)
+	authCode, err := sps.config.BasicAuth.Handle(w, r)
 	if err != nil {
 		sps.logger.Error(
 			msg,
-			zap.String("auth_code", code),
+			zap.String("auth_code", authCode),
 			zap.String("remote_addr", remoteAddr),
 			zap.String("latency", time.Since(startAt).String()),
 			zap.Any("error", err),
@@ -130,7 +132,7 @@ func (sps *SidecarProxyServer) handle(w http.ResponseWriter, r *http.Request) {
 
 	sps.logger.Info(
 		msg,
-		zap.String("auth_code", code),
+		zap.String("auth_code", authCode),
 		zap.String("remote_addr", remoteAddr),
 		zap.String("latency", time.Since(startAt).String()),
 	)
@@ -142,13 +144,13 @@ func (sps *SidecarProxyServer) SetServer(opts ...func(*http.Server)) {
 	}
 }
 
-func (sps *SidecarProxyServer) Serve() (shutdown func() error, err error) {
+func (sps *SidecarProxyServer) Serve(addr string) (shutdown func() error, err error) {
 	var (
 		listener net.Listener
 		mux      *http.ServeMux
 	)
 
-	if listener, err = net.Listen("tcp", sps.config.Addr); err != nil {
+	if listener, err = net.Listen("tcp", addr); err != nil {
 		return nil, err
 	}
 

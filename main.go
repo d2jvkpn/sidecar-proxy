@@ -30,6 +30,7 @@ func init() {
 func main() {
 	var (
 		config   string
+		addr     string
 		err      error
 		vp       *viper.Viper
 		project  *viper.Viper
@@ -52,6 +53,7 @@ func main() {
 	}
 
 	flag.StringVar(&config, "config", "configs/local.yaml", "configuration yaml file")
+	flag.StringVar(&addr, "addr", ":8080", "http server address")
 
 	flag.Usage = func() {
 		output := flag.CommandLine.Output()
@@ -74,7 +76,7 @@ func main() {
 		return
 	}
 
-	if shutdown, err = sps.Serve(); err != nil {
+	if shutdown, err = sps.Serve(addr); err != nil {
 		return
 	}
 	msg := fmt.Sprintf(

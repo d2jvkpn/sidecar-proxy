@@ -19,7 +19,7 @@ run:
 	mkdir -p target
 	go build -o target/main -ldflags="-w -s -X main.build_time=$(build_time) \
 	  -X main.git_branch=$(git_branch) -X main.git_commit_id=unknown" main.go
-	./target/main
+	./target/main --config=configs/local.yaml --addr=:8080
 
 build:
 	echo ">>> git branch: $(git_branch)"

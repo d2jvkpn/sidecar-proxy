@@ -4,7 +4,6 @@ version: 0.1.0
 
 config: |
   sidecar_proxy:
-    addr: :8080
     service: http://localhost:8000
     cors: "*"
     tls: false
