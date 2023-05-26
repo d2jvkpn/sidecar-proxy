@@ -15,8 +15,6 @@ git_branch = $(shell git rev-parse --abbrev-ref HEAD)
 # unpushed=$(git diff origin/$git_branch..HEAD --name-status)
 # -- [[ ! -z "$uncommitted$unpushed" ]] && git_tree_state="dirty"
 
-run:
-	go run main.go --config=configs/local.yaml --addr=:8080
 
 build:
 	echo ">>> git branch: $(git_branch)"
@@ -26,3 +24,9 @@ build:
 
 docker-build:
 	BuildLocal=true bash deployments/build.sh dev
+
+run:
+	go run main.go serve --config=configs/local.yaml --addr=:8080
+
+create-account:
+	go run main.go create-account --method=md5

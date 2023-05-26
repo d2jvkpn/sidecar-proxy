@@ -1,6 +1,9 @@
 package main
 
 import (
+	"bufio"
+	"bytes"
+	"crypto/md5"
 	_ "embed"
 	"flag"
 	"fmt"
@@ -16,6 +19,7 @@ import (
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var (
@@ -28,10 +32,35 @@ func init() {
 }
 
 func main() {
+	var err error
+
+	if len(os.Args) == 1 {
+		log.Fatalln("subcommand serve/create-user required")
+	}
+	log.SetOutput(os.Stderr)
+
+	serveCmd := flag.NewFlagSet("serve", flag.ExitOnError)
+	createUserCmd := flag.NewFlagSet("create-user", flag.ExitOnError)
+
+	switch os.Args[1] {
+	case serveCmd.Name():
+		err = serve(serveCmd, os.Args[2:])
+	case createUserCmd.Name():
+		err = createUser(createUserCmd, os.Args[2:])
+	default:
+		log.Fatalln("!!! invalid subcommand")
+	}
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+}
+
+func serve(fSet *flag.FlagSet, args []string) (err error) {
 	var (
 		config   string
 		addr     string
-		err      error
+		meta     map[string]any
 		vp       *viper.Viper
 		project  *viper.Viper
 		logger   *impls.Logger
@@ -39,37 +68,36 @@ func main() {
 		shutdown func() error
 	)
 
-	defer func() {
-		if logger != nil {
-			_ = logger.Down()
-		}
-		if err != nil {
-			log.Fatalln(err)
-		}
-	}()
-
 	if project, err = impls.LoadYamlBytes(_Project); err != nil {
 		return
 	}
 
-	flag.StringVar(&config, "config", "configs/local.yaml", "configuration yaml file")
-	flag.StringVar(&addr, "addr", ":8080", "http server address")
+	meta = gotk.BuildInfo()
+	meta["project"] = project.GetString("project")
+	meta["version"] = project.GetString("version")
 
-	flag.Usage = func() {
+	fSet.StringVar(&config, "config", "configs/local.yaml", "configuration yaml file")
+	fSet.StringVar(&addr, "addr", ":8080", "http server address")
+
+	fSet.Usage = func() {
 		output := flag.CommandLine.Output()
 
 		fmt.Fprintf(output, "Usage:\n")
 		flag.PrintDefaults()
 		fmt.Fprintf(output, "\nConfiguration:\n```yaml\n%s```\n", project.GetString("config"))
+		fmt.Fprintf(output, "\nBuild:\n```text\n%s\n```\n", gotk.BuildInfoText(meta))
 	}
 
-	flag.Parse()
+	fSet.Parse(args)
 
 	if vp, err = impls.LoadYamlConfig(config, "Configuration"); err != nil {
 		return
 	}
 
 	logger, err = impls.NewLogger("logs/sidecar-proxy.log", zapcore.InfoLevel, 256)
+	defer func() {
+		_ = logger.Down()
+	}()
 
 	vp = vp.Sub("sidecar_proxy")
 	if sps, err = pkg.NewSidecarProxyServer(vp, logger.Named("proxy")); err != nil {
@@ -92,7 +120,7 @@ func main() {
 	select {
 	case sig := <-quit: // sig := <-quit:
 		// if sig == syscall.SIGUSR2 {...}
-		fmt.Println("... received:", sig)
+		fmt.Fprintln(os.Stderr, "... received:", sig)
 	}
 
 	if err = shutdown(); err != nil {
@@ -101,4 +129,58 @@ func main() {
 		logger.Info("http server is down")
 		log.Println("<<< Exit")
 	}
+
+	return err
+}
+
+func createUser(fSet *flag.FlagSet, args []string) (err error) {
+	var (
+		cost     int
+		username []byte
+		password []byte
+		bts      []byte
+		method   string
+		reader   *bufio.Reader
+	)
+
+	fSet.StringVar(&method, "method", "md5", "password hash method: md5 or bcrypt")
+	fSet.IntVar(&cost, "cost", 10, "bcrypt adaptive hashing cost, works with method bcrypt")
+	fSet.Parse(args)
+
+	if method != "md5" && method != "bcrypt" {
+		return fmt.Errorf("!!! invlaid hash method")
+	}
+
+	reader = bufio.NewReader(os.Stdin)
+	fmt.Fprint(os.Stderr, ">>> Username: ")
+	if username, err = reader.ReadBytes('\n'); err != nil {
+		return
+	}
+	if username = bytes.TrimSpace(username); len(username) == 0 {
+		return fmt.Errorf("empty username")
+	}
+
+	fmt.Fprint(os.Stderr, ">>> Password: ")
+	if password, err = reader.ReadBytes('\n'); err != nil {
+		return
+	}
+	if password = bytes.TrimSpace(password); len(password) == 0 {
+		return fmt.Errorf("empty password")
+	}
+
+	switch method {
+	case "md5":
+		sum := md5.Sum(password)
+		bts = []byte(fmt.Sprintf("%x", sum[:]))
+	default: // bcrypt
+		bts, err = bcrypt.GenerateFromPassword(password, cost)
+	}
+
+	if err != nil {
+		return
+	}
+
+	// os.Stdout
+	fmt.Printf("users:\n- { username: '%s', password: '%s' }\n", username, bts)
+	return
 }
