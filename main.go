@@ -181,6 +181,6 @@ func createUser(fSet *flag.FlagSet, args []string) (err error) {
 	}
 
 	// os.Stdout
-	fmt.Printf("users:\n- { username: '%s', password: '%s' }\n", username, bts)
+	fmt.Printf("users:\n- { username: %q, password: %q }\n", username, bts)
 	return
 }
