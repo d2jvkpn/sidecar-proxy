@@ -10,7 +10,7 @@ A simple HTTP sidecar-proxy implementing basic authentication.
 
 
 #### 2. serve
-- configuration:
+- configuration(configs/sidecar_proxy.yaml):
 ```yaml
 sidecar_proxy:
   service: http://127.0.0.1:8000
