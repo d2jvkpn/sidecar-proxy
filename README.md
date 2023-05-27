@@ -1,5 +1,6 @@
 # sidecar-proxy
 A simple HTTP sidecar-proxy implementing basic authentication.
+
 *privides a basic auth accesss for services like stable-diffusion-webui and jaeger, supports tls, *
 *password hashing(md5 and bcrypt).*
 
