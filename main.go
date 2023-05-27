@@ -77,7 +77,7 @@ func serve(fSet *flag.FlagSet, args []string) (err error) {
 	meta["version"] = project.GetString("version")
 
 	fSet.StringVar(&config, "config", "configs/local.yaml", "configuration yaml file")
-	fSet.StringVar(&addr, "addr", ":8080", "http server address")
+	fSet.StringVar(&addr, "addr", ":9000", "http server address")
 
 	fSet.Usage = func() {
 		output := flag.CommandLine.Output()
@@ -109,7 +109,7 @@ func serve(fSet *flag.FlagSet, args []string) (err error) {
 	}
 	msg := fmt.Sprintf(
 		"Http server is listening on: %s => %s",
-		vp.GetString("addr"), vp.GetString("service"),
+		addr, vp.GetString("service"),
 	)
 	log.Println("==>", msg)
 	logger.Info(msg)

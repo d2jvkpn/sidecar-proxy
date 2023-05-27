@@ -15,7 +15,7 @@ services:
     - ./configs/:/home/hello/sidecar-proxy/configs/
     - ./logs/:/home/hello/sidecar-proxy/logs/
     # - ./data/:/home/hello/sidecar-proxy/data/
-    command: ["./main", "serve", "--config=configs/prod.yaml", "--addr=:${PORT}"]
+    command: ["./main", "serve", "--config=configs/sidecar-proxy.yaml", "--addr=:${PORT}"]
 
 networks:
   net:

@@ -26,7 +26,7 @@ docker-build:
 	BuildLocal=true bash deployments/build.sh dev
 
 run:
-	go run main.go serve --config=configs/local.yaml --addr=:8080
+	go run main.go serve --config=configs/sidecar-proxy.yaml --addr=:9000
 
 create-account:
 	go run main.go create-account --method=md5
