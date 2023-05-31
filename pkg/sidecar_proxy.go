@@ -11,7 +11,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/d2jvkpn/gotk/impls"
+	"github.com/d2jvkpn/gotk"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 )
@@ -42,7 +42,7 @@ type SidecarProxyConfig struct {
 	Cert string `mapstructure:"cert"`
 	Key  string `mapstructure:"key"`
 
-	BasicAuth impls.BasicAuthentication `mapstructure:"basic_auth"`
+	BasicAuth gotk.BasicAuths `mapstructure:"basic_auth"`
 }
 
 type SidecarProxyServer struct {

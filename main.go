@@ -15,7 +15,7 @@ import (
 	"github.com/d2jvkpn/sidecar-proxy/pkg"
 
 	"github.com/d2jvkpn/gotk"
-	"github.com/d2jvkpn/gotk/impls"
+	"github.com/d2jvkpn/gotk/cloud-logging"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -63,12 +63,12 @@ func serve(fSet *flag.FlagSet, args []string) (err error) {
 		meta     map[string]any
 		vp       *viper.Viper
 		project  *viper.Viper
-		logger   *impls.Logger
+		logger   *logging.Logger
 		sps      *pkg.SidecarProxyServer
 		shutdown func() error
 	)
 
-	if project, err = impls.LoadYamlBytes(_Project); err != nil {
+	if project, err = gotk.LoadYamlBytes(_Project); err != nil {
 		return
 	}
 
@@ -90,11 +90,11 @@ func serve(fSet *flag.FlagSet, args []string) (err error) {
 
 	fSet.Parse(args)
 
-	if vp, err = impls.LoadYamlConfig(config, "Configuration"); err != nil {
+	if vp, err = gotk.LoadYamlConfig(config, "Configuration"); err != nil {
 		return
 	}
 
-	logger, err = impls.NewLogger("logs/sidecar-proxy.log", zapcore.InfoLevel, 256)
+	logger, err = logging.NewLogger("logs/sidecar-proxy.log", zapcore.InfoLevel, 256)
 	defer func() {
 		_ = logger.Down()
 	}()
