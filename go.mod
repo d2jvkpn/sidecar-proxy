@@ -3,7 +3,7 @@ module github.com/d2jvkpn/sidecar-proxy
 go 1.20
 
 require (
-	github.com/d2jvkpn/gotk v0.0.0-20230531014145-cb97ee5e7878
+	github.com/d2jvkpn/gotk v0.0.0-20230607124326-189a26bff1fb
 	github.com/d2jvkpn/gotk/cloud-logging v0.0.0-20230531014145-cb97ee5e7878
 	github.com/spf13/viper v1.16.0
 	go.uber.org/zap v1.24.0

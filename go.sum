@@ -49,6 +49,12 @@ github.com/cncf/udpa/go v0.0.0-20200629203442-efcf912fb354/go.mod h1:WmhPx2Nbnht
 github.com/cncf/udpa/go v0.0.0-20201120205902-5459f2c99403/go.mod h1:WmhPx2Nbnhtbo57+VJT5O0JRkEi1Wbu0z5j0R8u5Hbk=
 github.com/d2jvkpn/gotk v0.0.0-20230531014145-cb97ee5e7878 h1:8KLlNVDjGr8Y4jPn/bE1YhGTZVDxmV4dIz+voMUHKP4=
 github.com/d2jvkpn/gotk v0.0.0-20230531014145-cb97ee5e7878/go.mod h1:8FDB5G3+KHfklGltBxdgDLaw3dGulyGaVu+dM9P7Bn4=
+github.com/d2jvkpn/gotk v0.0.0-20230607121908-d1499f89ff59 h1:6WBBqNXYh/Ww0aPWIfpDjQr8FlL6rbusW4wMlvwlBdw=
+github.com/d2jvkpn/gotk v0.0.0-20230607121908-d1499f89ff59/go.mod h1:Y8Ep8EIDfUPP8SLYIBbPrgfUFRJYYOL14pNTQrqF+gQ=
+github.com/d2jvkpn/gotk v0.0.0-20230607122933-8e6d6b0316d6 h1:QUBCbQo5IyxGQwh2+Rwd7dkwPkTA2NS9ypE+mjdZcvk=
+github.com/d2jvkpn/gotk v0.0.0-20230607122933-8e6d6b0316d6/go.mod h1:Y8Ep8EIDfUPP8SLYIBbPrgfUFRJYYOL14pNTQrqF+gQ=
+github.com/d2jvkpn/gotk v0.0.0-20230607124326-189a26bff1fb h1:h/IkF7Nakem5SgxfK0SO3akgXtU0Bbh5OOBPrj/T0IE=
+github.com/d2jvkpn/gotk v0.0.0-20230607124326-189a26bff1fb/go.mod h1:Y8Ep8EIDfUPP8SLYIBbPrgfUFRJYYOL14pNTQrqF+gQ=
 github.com/d2jvkpn/gotk/cloud-logging v0.0.0-20230531014145-cb97ee5e7878 h1:XHGJc68zX3VayQULbKF9/G86lh8j70QZ3oWBxtlS33g=
 github.com/d2jvkpn/gotk/cloud-logging v0.0.0-20230531014145-cb97ee5e7878/go.mod h1:040QMXzLFOsIGmlIle3bK9fmk9m1aCTPF1D2z2QAnak=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

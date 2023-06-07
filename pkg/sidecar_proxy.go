@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/d2jvkpn/gotk"
@@ -35,8 +36,9 @@ sidecar_proxy:
 ```
 */
 type SidecarProxyConfig struct {
-	Service string `mapstructure:"service"`
-	Cors    string `mapstructure:"cors"`
+	Service        string   `mapstructure:"service"`
+	Cors           string   `mapstructure:"cors"`
+	PassWithPrefix []string `mapstructure:"pass_with_prefix"`
 
 	Tls  bool   `mapstructure:"tls"`
 	Cert string `mapstructure:"cert"`
@@ -62,6 +64,12 @@ func NewSidecarProxyServer(vp *viper.Viper, logger *zap.Logger, opts ...func(*ht
 	vp.SetDefault("cors", "*")
 	if err = vp.Unmarshal(&config); err != nil {
 		return nil, err
+	}
+
+	for _, v := range config.PassWithPrefix {
+		if !strings.HasPrefix(v, "/") {
+			return nil, fmt.Errorf("invalid valid in pass_with_prefix: %s", v)
+		}
 	}
 
 	if err = config.BasicAuth.Validate(); err != nil {
@@ -109,25 +117,54 @@ func (sps *SidecarProxyServer) handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	startAt := time.Now()
-	msg := fmt.Sprintf("%s %s", r.Method, r.URL.Path)
+	var (
+		shouldPass bool
+		msg        string
+		remoteAddr string
+		ip, path   string
+		authCode   string
+		latency    string
+		startAt    time.Time
+		user       *gotk.BasicAuthUser
+		err        error
+	)
 
-	remoteAddr := r.RemoteAddr
+	startAt = time.Now()
+	msg = fmt.Sprintf("%s@%s", r.Method, r.URL.Path)
+
+	remoteAddr = r.RemoteAddr
 	if v := r.Header.Get("X-Forwarded-For"); v != "" {
 		remoteAddr = v
 	}
-	ip, _, _ := net.SplitHostPort(remoteAddr)
+	ip, _, _ = net.SplitHostPort(remoteAddr)
+	path = r.URL.Path
 
-	user, authCode, err := sps.config.BasicAuth.Handle(w, r)
+	shouldPass = false
+	for i := range sps.config.PassWithPrefix {
+		if strings.HasPrefix(path, sps.config.PassWithPrefix[i]) {
+			shouldPass = true
+			break
+		}
+	}
+
+	if !shouldPass {
+		user, authCode, err = sps.config.BasicAuth.Handle(w, r)
+	}
+	latency = time.Since(startAt).String()
+
+	fields := []zap.Field{
+		zap.String("ip", ip),
+		zap.String("auth_code", authCode),
+		zap.String("latency", latency),
+	}
+
+	if user != nil {
+		fields = append(fields, zap.String("user", user.Username))
+	}
+
 	if err != nil {
-		sps.logger.Error(
-			msg,
-			zap.String("ip", ip),
-			zap.String("user", user),
-			zap.String("auth_code", authCode),
-			zap.String("latency", time.Since(startAt).String()),
-			zap.Any("error", err),
-		)
+		fields = append(fields, zap.Any("error", err))
+		sps.logger.Error(msg, fields...)
 		return
 	}
 
@@ -135,13 +172,7 @@ func (sps *SidecarProxyServer) handle(w http.ResponseWriter, r *http.Request) {
 	r.Host = sps.svcUrl.Host
 	proxy.ServeHTTP(w, r)
 
-	sps.logger.Info(
-		msg,
-		zap.String("ip", ip),
-		zap.String("user", user),
-		zap.String("auth_code", authCode),
-		zap.String("latency", time.Since(startAt).String()),
-	)
+	sps.logger.Info(msg, fields...)
 }
 
 func (sps *SidecarProxyServer) Serve(addr string) (shutdown func() error, err error) {
