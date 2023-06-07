@@ -66,11 +66,13 @@ func NewSidecarProxyServer(vp *viper.Viper, logger *zap.Logger, opts ...func(*ht
 		return nil, err
 	}
 
-	for _, v := range config.PassWithPrefix {
-		if !strings.HasPrefix(v, "/") {
-			return nil, fmt.Errorf("invalid valid in pass_with_prefix: %s", v)
+	/*
+		for _, v := range config.PassWithPrefix {
+			if !strings.HasPrefix(v, "/") {
+				return nil, fmt.Errorf("invalid valid in pass_with_prefix: %s", v)
+			}
 		}
-	}
+	*/
 
 	if err = config.BasicAuth.Validate(); err != nil {
 		return nil, err
@@ -121,7 +123,7 @@ func (sps *SidecarProxyServer) handle(w http.ResponseWriter, r *http.Request) {
 		shouldPass bool
 		msg        string
 		remoteAddr string
-		ip, path   string
+		ip         string
 		authCode   string
 		latency    string
 		startAt    time.Time
@@ -137,11 +139,11 @@ func (sps *SidecarProxyServer) handle(w http.ResponseWriter, r *http.Request) {
 		remoteAddr = v
 	}
 	ip, _, _ = net.SplitHostPort(remoteAddr)
-	path = r.URL.Path
 
 	shouldPass = false
 	for i := range sps.config.PassWithPrefix {
-		if strings.HasPrefix(path, sps.config.PassWithPrefix[i]) {
+		// fmt.Println("~~~", msg, sps.config.PassWithPrefix[i])
+		if strings.HasPrefix(msg, sps.config.PassWithPrefix[i]) {
 			shouldPass = true
 			break
 		}
