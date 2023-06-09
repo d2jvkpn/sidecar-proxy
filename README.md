@@ -15,6 +15,8 @@ A simple HTTP sidecar-proxy implementing basic authentication.
 sidecar_proxy:
   service: http://127.0.0.1:8000
   cors: "*"
+  # pass_with_prefix: ["GET@/assets/"]
+  pass_with_prefix: []
   tls: false
   cert: "configs/server.cert"
   key: "configs/server.key"

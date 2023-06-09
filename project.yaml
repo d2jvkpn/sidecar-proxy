@@ -6,7 +6,7 @@ config: |
   sidecar_proxy:
     service: http://localhost:8000
     cors: "*"
-    # pass_with_prefix: ["GET@/target"]
+    # pass_with_prefix: ["GET@/assets/"]
     pass_with_prefix: []
     tls: false
     cert: "configs/server.cert"
