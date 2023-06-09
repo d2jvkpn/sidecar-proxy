@@ -5,16 +5,15 @@ services:
     image: registry.cn-shanghai.aliyuncs.com/d2jvkpn/sidecar-proxy:${TAG}
     container_name: sidecar-proxy
     restart: always
-    # depends_on: ["mongo"]
+    # depends_on: ["app"]
     networks: ["net"]
-    # network_mode: bridge
     # network_mode: host
     ports: ["${PORT}:${PORT}"]
+    user: 1000:1000
     environment: ["TZ=Asia/Shanghai"]
     volumes:
     - ./configs/:/home/hello/sidecar-proxy/configs/
     - ./logs/:/home/hello/sidecar-proxy/logs/
-    # - ./data/:/home/hello/sidecar-proxy/data/
     command: ["./main", "serve", "--config=configs/sidecar-proxy.yaml", "--addr=:${PORT}"]
 
 networks:
