@@ -50,6 +50,7 @@ type SidecarProxyConfig struct {
 type SidecarProxyServer struct {
 	config SidecarProxyConfig
 	svcUrl *url.URL
+	proxy  *httputil.ReverseProxy
 	server *http.Server
 	logger *zap.Logger
 }
@@ -87,6 +88,7 @@ func NewSidecarProxyServer(vp *viper.Viper, logger *zap.Logger, opts ...func(*ht
 	if sps.svcUrl, err = url.Parse(config.Service); err != nil {
 		return nil, err
 	}
+	sps.proxy = httputil.NewSingleHostReverseProxy(sps.svcUrl)
 
 	for i := range opts {
 		opts[i](sps.server)
@@ -125,20 +127,14 @@ func (sps *SidecarProxyServer) handle(w http.ResponseWriter, r *http.Request) {
 		remoteAddr string
 		ip         string
 		authCode   string
-		latency    string
+		err        error
 		startAt    time.Time
 		user       *gotk.BasicAuthUser
-		err        error
+		fields     []zap.Field
 	)
 
-	startAt = time.Now()
+	r.Host = sps.svcUrl.Host
 	msg = fmt.Sprintf("%s@%s", r.Method, r.URL.Path)
-
-	remoteAddr = r.RemoteAddr
-	if v := r.Header.Get("X-Forwarded-For"); v != "" {
-		remoteAddr = v
-	}
-	ip, _, _ = net.SplitHostPort(remoteAddr)
 
 	shouldPass = false
 	for i := range sps.config.PassWithPrefix {
@@ -148,17 +144,23 @@ func (sps *SidecarProxyServer) handle(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 	}
-
-	if !shouldPass {
-		user, authCode, err = sps.config.BasicAuth.Handle(w, r)
+	if shouldPass {
+		sps.proxy.ServeHTTP(w, r)
+		return
 	}
-	latency = time.Since(startAt).String()
 
-	fields := []zap.Field{
-		zap.String("ip", ip),
-		zap.String("auth_code", authCode),
-		zap.String("latency", latency),
+	startAt = time.Now()
+	remoteAddr = r.RemoteAddr
+	if v := r.Header.Get("X-Forwarded-For"); v != "" {
+		remoteAddr = v
 	}
+	ip, _, _ = net.SplitHostPort(remoteAddr)
+
+	fields = make([]zap.Field, 0, 5)
+	fields = append(fields, zap.String("ip", ip))
+
+	user, authCode, err = sps.config.BasicAuth.Handle(w, r)
+	fields = append(fields, zap.String("auth_code", authCode))
 
 	if user != nil {
 		fields = append(fields, zap.String("user", user.Username))
@@ -170,10 +172,8 @@ func (sps *SidecarProxyServer) handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	proxy := httputil.NewSingleHostReverseProxy(sps.svcUrl)
-	r.Host = sps.svcUrl.Host
-	proxy.ServeHTTP(w, r)
-
+	sps.proxy.ServeHTTP(w, r)
+	fields = append(fields, zap.String("latency", time.Since(startAt).String()))
 	sps.logger.Info(msg, fields...)
 }
 
