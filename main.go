@@ -170,7 +170,7 @@ func createUser(fSet *flag.FlagSet, args []string) (err error) {
 
 	switch method {
 	case "md5":
-		sum := md5.Sum(password)
+		sum := md5.Sum(bytes.Join([][]byte{username, password}, []byte(":")))
 		bts = []byte(fmt.Sprintf("%x", sum[:]))
 	default: // bcrypt
 		bts, err = bcrypt.GenerateFromPassword(password, cost)
