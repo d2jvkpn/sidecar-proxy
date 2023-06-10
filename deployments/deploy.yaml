@@ -4,6 +4,7 @@ services:
   sidecar-proxy:
     image: registry.cn-shanghai.aliyuncs.com/d2jvkpn/sidecar-proxy:${TAG}
     container_name: sidecar-proxy
+    user: 1000:1000
     restart: always
     # depends_on: ["app"]
     networks: ["net"]
