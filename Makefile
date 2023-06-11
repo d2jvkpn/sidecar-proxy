@@ -28,5 +28,8 @@ docker-build:
 run:
 	go run main.go serve --config=configs/sidecar-proxy.yaml --addr=:9000
 
-create-user:
+create-user_md5:
 	go run main.go create-user --method=md5
+
+create-user_bcrypt:
+	go run main.go create-user --method=bcrypt
