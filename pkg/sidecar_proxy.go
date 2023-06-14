@@ -44,6 +44,11 @@ type SidecarProxyConfig struct {
 	Cert string `mapstructure:"cert"`
 	Key  string `mapstructure:"key"`
 
+	InsertHeaders []struct {
+		Key   string `mapstructure:"key"`
+		Value string `mapstructure:"value"`
+	} `mapstructure:"insert_headers"`
+
 	BasicAuth gotk.BasicAuths `mapstructure:"basic_auth"`
 }
 
@@ -63,6 +68,8 @@ func NewSidecarProxyServer(vp *viper.Viper, logger *zap.Logger, opts ...func(*ht
 	)
 
 	vp.SetDefault("cors", "*")
+	vp.Set("basic_auth.enable", "true")
+
 	if err = vp.Unmarshal(&config); err != nil {
 		return nil, err
 	}
@@ -78,6 +85,7 @@ func NewSidecarProxyServer(vp *viper.Viper, logger *zap.Logger, opts ...func(*ht
 	if err = config.BasicAuth.Validate(); err != nil {
 		return nil, err
 	}
+	// fmt.Printf("~~~ %#v\n", config.BasicAuth)
 
 	sps = &SidecarProxyServer{
 		config: config,
@@ -107,7 +115,7 @@ func NewSidecarProxyServer(vp *viper.Viper, logger *zap.Logger, opts ...func(*ht
 	return sps, nil
 }
 
-func (sps *SidecarProxyServer) handle(w http.ResponseWriter, r *http.Request) {
+func (sps *SidecarProxyServer) Handle(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "OPTIONS" {
 		header := w.Header()
 		header.Set("Access-Control-Allow-Origin", sps.config.Cors)
@@ -133,7 +141,6 @@ func (sps *SidecarProxyServer) handle(w http.ResponseWriter, r *http.Request) {
 		fields     []zap.Field
 	)
 
-	r.Host = sps.svcUrl.Host
 	msg = fmt.Sprintf("%s@%s", r.Method, r.URL.Path)
 
 	shouldPass = false
@@ -145,7 +152,7 @@ func (sps *SidecarProxyServer) handle(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if shouldPass {
-		sps.proxy.ServeHTTP(w, r)
+		sps.handle(w, r)
 		return
 	}
 
@@ -172,9 +179,22 @@ func (sps *SidecarProxyServer) handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sps.proxy.ServeHTTP(w, r)
+	sps.handle(w, r)
 	fields = append(fields, zap.String("latency", time.Since(startAt).String()))
 	sps.logger.Info(msg, fields...)
+}
+
+func (sps *SidecarProxyServer) handle(w http.ResponseWriter, r *http.Request) {
+	r.Host = sps.svcUrl.Host
+
+	r.Header.Del("Authorization")
+
+	for i := range sps.config.InsertHeaders {
+		h := sps.config.InsertHeaders[i]
+		r.Header.Add(h.Key, h.Value)
+	}
+
+	sps.proxy.ServeHTTP(w, r)
 }
 
 func (sps *SidecarProxyServer) Serve(addr string) (shutdown func() error, err error) {
@@ -189,7 +209,7 @@ func (sps *SidecarProxyServer) Serve(addr string) (shutdown func() error, err er
 
 	mux = http.NewServeMux()
 	// mux.Handle("/", handler)
-	mux.HandleFunc("/", sps.handle)
+	mux.HandleFunc("/", sps.Handle)
 	sps.server.Handler = mux
 
 	shutdown = func() error {

@@ -20,12 +20,13 @@ sidecar_proxy:
   tls: false
   cert: "configs/server.cert"
   key: "configs/server.key"
+  insert_headers:
+  - { key: "x-1", value: "y-1" }
+  - { key: "x-2", value: "y-2" }
   basic_auth:
-    enable: true
     method: md5
     users:
-    - { username: jaeger-pFNmoz89, password: 90a24d35e14a06148112c0af05c04686 }
-    - { username: hello,           password: 6de41d334b7ce946682da48776a10bb9 }
+    - { username: hello, password: 6de41d334b7ce946682da48776a10bb9 }
     # method: bcrypt
     # users:
     # - {username: hello, password: "$2a$10$scqefoWP3SwzgB.bLkbQ0e0Cre45AA16ibI3lxichOp3FohzQm9BK" }
