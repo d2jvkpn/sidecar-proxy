@@ -44,6 +44,8 @@ type SidecarProxyConfig struct {
 	Cert string `mapstructure:"cert"`
 	Key  string `mapstructure:"key"`
 
+	LimitIps []string `mapstructure:"limit_ips"`
+
 	InsertHeaders []struct {
 		Key   string `mapstructure:"key"`
 		Value string `mapstructure:"value"`
@@ -130,7 +132,6 @@ func (sps *SidecarProxyServer) Handle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var (
-		shouldPass bool
 		msg        string
 		remoteAddr string
 		ip         string
@@ -143,20 +144,6 @@ func (sps *SidecarProxyServer) Handle(w http.ResponseWriter, r *http.Request) {
 
 	msg = fmt.Sprintf("%s@%s", r.Method, r.URL.Path)
 
-	shouldPass = false
-	for i := range sps.config.PassWithPrefix {
-		// fmt.Println("~~~", msg, sps.config.PassWithPrefix[i])
-		if strings.HasPrefix(msg, sps.config.PassWithPrefix[i]) {
-			shouldPass = true
-			break
-		}
-	}
-	if shouldPass {
-		sps.handle(w, r)
-		return
-	}
-
-	startAt = time.Now()
 	remoteAddr = r.RemoteAddr
 	if v := r.Header.Get("X-Forwarded-For"); v != "" {
 		remoteAddr = v
@@ -166,9 +153,25 @@ func (sps *SidecarProxyServer) Handle(w http.ResponseWriter, r *http.Request) {
 	fields = make([]zap.Field, 0, 5)
 	fields = append(fields, zap.String("ip", ip))
 
+	if !sps.checkIp(ip) {
+		fields = append(fields, zap.String("auth_code", "ip_not_allowed"))
+		sps.logger.Error(msg, fields...)
+		w.WriteHeader(http.StatusForbidden)
+		w.Write(nil)
+		return
+	}
+
+	if sps.shouldPass(msg) {
+		fields = append(fields, zap.String("auth_code", "pass"))
+		sps.logger.Info(msg, fields...)
+		sps.handle(w, r)
+		return
+	}
+
+	startAt = time.Now()
+
 	user, authCode, err = sps.config.BasicAuth.Handle(w, r)
 	fields = append(fields, zap.String("auth_code", authCode))
-
 	if user != nil {
 		fields = append(fields, zap.String("user", user.Username))
 	}
@@ -176,12 +179,39 @@ func (sps *SidecarProxyServer) Handle(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fields = append(fields, zap.Any("error", err))
 		sps.logger.Error(msg, fields...)
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write(nil)
 		return
 	}
 
 	sps.handle(w, r)
 	fields = append(fields, zap.String("latency", time.Since(startAt).String()))
 	sps.logger.Info(msg, fields...)
+}
+
+func (sps *SidecarProxyServer) checkIp(ip string) bool {
+	if len(sps.config.LimitIps) == 0 {
+		return true
+	}
+
+	for i := range sps.config.LimitIps {
+		if sps.config.LimitIps[i] == ip {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (sps *SidecarProxyServer) shouldPass(msg string) bool {
+	for i := range sps.config.PassWithPrefix {
+		// fmt.Println("~~~", msg, sps.config.PassWithPrefix[i])
+		if strings.HasPrefix(msg, sps.config.PassWithPrefix[i]) {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (sps *SidecarProxyServer) handle(w http.ResponseWriter, r *http.Request) {

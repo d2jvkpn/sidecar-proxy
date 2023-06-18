@@ -20,6 +20,7 @@ sidecar_proxy:
   tls: false
   cert: "configs/server.cert"
   key: "configs/server.key"
+  limit_ips: []
   insert_headers:
   - { key: "x-1", value: "y-1" }
   - { key: "x-2", value: "y-2" }
