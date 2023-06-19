@@ -23,6 +23,9 @@ build:
 	  -X main.git_branch=$(git_branch) -X main.git_commit_id=unknown" main.go
 
 docker-build:
+	bash deployments/build.sh dev
+
+docker-build-local:
 	BuildLocal=true bash deployments/build.sh dev
 
 run:
