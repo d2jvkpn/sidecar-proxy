@@ -17,24 +17,6 @@ import (
 	"go.uber.org/zap"
 )
 
-/*
-```yaml
-sidecar_proxy:
-
-	addr: :8080
-	service: localhost:8000
-	cors: "*"
-	tls: true
-	cert: "configs/server.cert"
-	key: "configs/server.key"
-	auth:
-	  enable: true
-	  users:
-	    x1: bycrypt-y1
-	    x2: bycrypt-y2
-
-```
-*/
 type SidecarProxyConfig struct {
 	Service        string   `mapstructure:"service"`
 	Cors           string   `mapstructure:"cors"`
@@ -44,7 +26,8 @@ type SidecarProxyConfig struct {
 	Cert string `mapstructure:"cert"`
 	Key  string `mapstructure:"key"`
 
-	LimitIps []string `mapstructure:"limit_ips"`
+	RealIpHeader string   `mapstructure:"real_ip_header"`
+	LimitIps     []string `mapstructure:"limit_ips"`
 
 	InsertHeaders []struct {
 		Key   string `mapstructure:"key"`
@@ -70,6 +53,7 @@ func NewSidecarProxyServer(vp *viper.Viper, logger *zap.Logger, opts ...func(*ht
 	)
 
 	vp.SetDefault("cors", "*")
+	vp.SetDefault("real_ip_header", "X-Real-IP")
 	vp.Set("basic_auth.enable", "true")
 
 	if err = vp.Unmarshal(&config); err != nil {
@@ -145,10 +129,11 @@ func (sps *SidecarProxyServer) Handle(w http.ResponseWriter, r *http.Request) {
 	msg = fmt.Sprintf("%s@%s", r.Method, r.URL.Path)
 
 	remoteAddr = r.RemoteAddr
-	if v := r.Header.Get("X-Forwarded-For"); v != "" {
-		remoteAddr = v
+	if v := r.Header.Get(sps.config.RealIpHeader); v != "" {
+		ip = v
+	} else {
+		ip, _, _ = net.SplitHostPort(remoteAddr)
 	}
-	ip, _, _ = net.SplitHostPort(remoteAddr)
 
 	fields = make([]zap.Field, 0, 5)
 	fields = append(fields, zap.String("ip", ip))
